@@ -86,19 +86,19 @@ public final class Smite {
     private let connection: OpaquePointer
     private let queue: DispatchQueue
 
-    /// Opens the SQLite database at _path_, creating it if it doesn't exist.
+    /// Opens or creates a SQLite database at _path_.
     /// Database connection is closed when the object is deallocated.
     ///
     public init(path: String) throws {
         var rawConnection: OpaquePointer?
-        let flags = SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX
+        let flags = SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX
         let result = sqlite3_open_v2(path, &rawConnection, flags, nil)
         guard result == SQLITE_OK, let connection = rawConnection else {
             _ = sqlite3_close(rawConnection)
             throw Error.onOpen(sqliteCode: result, path: path)
         }
         self.connection = connection
-        self.queue = DispatchQueue(label: "sqlite://\(path)", qos: .default, attributes: [], autoreleaseFrequency: .workItem, target: .global())
+        self.queue = DispatchQueue(label: "smite://\(path)")
     }
 
     deinit {
